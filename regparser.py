@@ -7,6 +7,7 @@
 """
 
 import re
+import sys
 import configparser
 
 class registry_item(object):
@@ -105,13 +106,15 @@ class regparser(object):
         На основе строки формата hex:09,39,40,30,43,48,94,89,32,49
         возвращаем тип binary InnoSetup
         """
+        if self.is_directory(prepare_string):
+            return 'string'
         
         tmp_list = re.split(':', prepare_string)
         
         if len(tmp_list) == 1:
             return 'string'
         
-        elif len(tmp_list) == 2:
+        elif len(tmp_list) >= 2:
             if tmp_list[0] == 'hex(2)':
                 return 'expandsz'
             
@@ -127,30 +130,50 @@ class regparser(object):
             elif tmp_list[0] == 'hex(7)':
                 return 'multisz'
             
-            else:
-                return 'none'
+            return 'string'
         
     def get_item_value(self, prepare_string):
         """
         На основе строки формата hex:09,39,40,30,43,48,94,89,32,49
         возвращаем 09,39,40,30,43,48,94,89,32,49
         """
+        if self.is_directory(prepare_string):
+            return prepare_string
+            
         tmp_list = re.split(':', prepare_string)
         if len(tmp_list) == 1:
             return tmp_list[0][1:-1]
         elif len(tmp_list) == 2:
             return tmp_list[1]
+            
+    def is_directory(self, prepare_string):
+        """
+        Проверка является ли строка кайловым каталогом 
+        """
+        if re.match(r'^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))', prepare_string):
+            # https://techtavern.wordpress.com/2009/04/06/regex-that-matches-path-filename-and-extension/
+            # если найден файловый путь, с ним работаем по особому
+            return True
+        else:
+            return False
     
     def innosetup(self):
-        print('[Registry]')
+        #print('[Registry]')
         for hive in self.big_registry_list:
             #print(hive.root, '|', hive.subkey)
             for itms in hive.list_items:
-                tmp_str = ''
-                tmp_str += 'Root: ' + hive.root + ';'
-                tmp_str += ' Subkey: ' + hive.subkey + ';'
-                tmp_str += ' ValueType: ' + itms.type + ';'
-                tmp_str += ' ValueName: ' + itms.name + ';'
-                tmp_str += ' ValueData: ' + itms.value              
-                print(tmp_str)
-  
+                try:
+                    tmp_str = ''
+                    tmp_str += 'Root: ' + hive.root + ';'
+                    tmp_str += ' Subkey: ' + hive.subkey + ';'
+                    tmp_str += ' ValueType: ' + itms.type + ';'
+                    tmp_str += ' ValueName: ' + itms.name + ';'
+                    tmp_str += ' ValueData: ' + itms.value              
+                    print(tmp_str)
+                except TypeError:
+                    print('OOOOOOOOOx')
+                    
+                    #sys.exit(1)
+                    
+                    
+                    
