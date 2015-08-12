@@ -37,7 +37,11 @@ class regparser(object):
         # включаем режим правильных регистров букв в именах ключей
         # это тоже хак!
         self.config.optionxform = str
-    
+        
+        # инициализируем пустые атрибуты для последующего доступа к ним из методов
+        self.last_type = ''
+        
+        
     def read_files_list(self,  fns):
         """
         Обработка файлов по списку
@@ -48,23 +52,41 @@ class regparser(object):
             self.blks = self.config.sections()
             # наполняем список big_registry_list данными
             for hive in self.blks:
-                regb = registry_block()
-                regb.root = self.get_root(self.config[hive].name)
-                regb.subkey = self.reg_subkey(self.config[hive].name)
+                self.regb = registry_block()
+                self.regb.root = self.get_root(self.config[hive].name)
+                self.regb.subkey = self.reg_subkey(self.config[hive].name)
                 for itm in self.config[hive]:
-                    regi = registry_item()
-                    regi.name = itm[1:-1] # убираем кавычки слева и справа 
+                    self.regi = registry_item()
+                    self.regi.name = itm[1:-1] # убираем кавычки слева и справа 
                     tmp_var = self.config[hive][itm]
-                    regi.type = self.get_item_type(tmp_var)
-                    regi.value = self.double_characters(self.get_item_value(tmp_var))
-                    regb.list_items.append(regi)
+                    self.regi.type = self.get_item_type(tmp_var)
+                    self.last_type = self.get_item_type(tmp_var)
+                    tmp_str = self.get_item_value(tmp_var)
+                    tmp_str = self.text_proc1(tmp_str)
+                    tmp_str = self.double_characters(tmp_str)
+                    self.regi.value = tmp_str
+                    self.regb.list_items.append(self.regi)
                 
-                self.big_registry_list.append(regb)
+                self.big_registry_list.append(self.regb)
 
-            # освобождаем память
-            regi = ''
-            regb = ''
             
+    def text_proc1(self, prepare_string, debug=False):
+        """
+        Преобразуем значение ключа реестра типа binar из формата 
+        "0,00,00"  в формат "00 00 00"
+        """
+        if debug or self.regi.type == 'binary':
+            tmp_list = re.split(',', prepare_string)
+            count_elems = len(tmp_list)
+            for elem in range(count_elems):
+                if len(tmp_list[elem]) == 1:
+                    tmp_list[elem] = '0' + tmp_list[elem]
+             
+            prepare_string = ' '.join(tmp_list)
+            return prepare_string
+        else:
+            return prepare_string
+        
     def prepare_value(self, prepare_string):
         # превращает данные в формат InnoSetup, преобразует данные
         # 43,00,3a,00,5c,00,45,00,47,00,52,00,50,00,4f,00,52,00,41,00,\
@@ -107,6 +129,7 @@ class regparser(object):
         
         tmp_str = '\\'.join(tmp_subkey) 
         
+        tmp_str = '"' + tmp_str + '"' # опять хак!
         tmp_str = self.double_characters(tmp_str)
         return tmp_str
         
@@ -143,7 +166,7 @@ class regparser(object):
         
     def get_item_value(self, prepare_string):
         """
-        На основе строки формата hex:09,39,40,30,43,48,94,89,32,49
+        На основе строки форамата hex:09,39,40,30,43,48,94,89,32,49
         возвращаем 09,39,40,30,43,48,94,89,32,49
         """
         if self.is_directory(prepare_string):
@@ -151,8 +174,8 @@ class regparser(object):
             
         tmp_list = re.split(':', prepare_string)
         if len(tmp_list) == 1:
-            tmp_str = tmp_list[0][1:-1]
-            return tmp_str
+            #tmp_str = tmp_list[0][1:-1] # убираем окружающие двойные кавычники 
+            return tmp_list[0]
         elif len(tmp_list) == 2:
             tmp_str = self.prepare_value(tmp_list[1])
             #tmp_str = self.double_characters(tmp_str)
@@ -162,20 +185,37 @@ class regparser(object):
         """
         Проверка является ли строка кайловым каталогом 
         """
-        if re.match(r'^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))', prepare_string):
+        old_re = r'^(.*/)?(?:$|(.+?)(?:(\.[^.]*$)|$))'
+        new_re = r'^(?:[\w]\:|\\)(\\[a-z_\-\s0-9\.]+)+\.(txt|gif|pdf|doc|docx|xls|xlsx)$'
+        new_re = r'^["]?[A-Z]:\\.*$'
+        if re.match(new_re, prepare_string):
             # https://techtavern.wordpress.com/2009/04/06/regex-that-matches-path-filename-and-extension/
             # если найден файловый путь, с ним работаем по особому
             return True
         else:
             return False
     
-    def double_characters(self, prepare_string):
+    def double_characters(self, prepare_string, debug=False, type='binary'):
         """
         Замена строки {289D6FA0-2A7D-11CF-AD05-0020AF0BA9E2} на строку
         {{289D6FA0-2A7D-11CF-AD05-0020AF0BA9E2}}
         """
+        if not(prepare_string):
+            return ''
+        
+        if debug or self.last_type == 'binary':
+            prepare_string = '"' + prepare_string + '"'
+            return prepare_string
+            
+        prepare_string = prepare_string[1:-1]
+        # выполняем условие если внутри строки есть двойные кавычки
+        if re.search('"', prepare_string):
+            prepare_string = re.sub(r'"', r'""', prepare_string)
+        
         prepare_string = re.sub(r'{', r'{{', prepare_string)
         prepare_string = re.sub(r'}', r'}}', prepare_string)
+            
+        prepare_string = '"' + prepare_string + '"'    
         
         return prepare_string
     
