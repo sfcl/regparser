@@ -7,11 +7,8 @@ from regparser import regparser
 
 files_list = glob('regs/*.reg')
 
-files_list = ['regs/37.reg',]
-
-# конструктору объекта передаём список из имён файлов
-reg = regparser(files_list)
+reg = regparser()
+reg.read_files_list(files_list)
 
 print('[Registry]')
 reg.innosetup() # печать ключей реестра в формате  InnoSetup
-

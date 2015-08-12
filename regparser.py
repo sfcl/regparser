@@ -25,19 +25,24 @@ class registry_block(object):
         self.list_items = []
             
 class regparser(object):
-    def __init__(self, fn):
+    def __init__(self):
         # fn - список из строк-имён файлов
         self.big_registry_list = []
-        self.files_names = fn
+        self.files_names = []
 
         # отключаем ругательство на стартовую строку Windows Registry Editor Version 5.00
         # это хак!
-        self.config = configparser.ConfigParser(comment_prefixes = ('#', ';', 'Windows', ))
+        self.config = configparser.RawConfigParser(comment_prefixes = ('#', ';', 'Windows', ))
 
         # включаем режим правильных регистров букв в именах ключей
         # это тоже хак!
         self.config.optionxform = str
-        
+    
+    def read_files_list(self,  fns):
+        """
+        Обработка файлов по списку
+        """
+        self.files_names = fns
         for file_name in self.files_names: 
             self.config.read(file_name, encoding='utf-16',)
             self.blks = self.config.sections()
@@ -51,7 +56,7 @@ class regparser(object):
                     regi.name = itm[1:-1] # убираем кавычки слева и справа 
                     tmp_var = self.config[hive][itm]
                     regi.type = self.get_item_type(tmp_var)
-                    regi.value = self.get_item_value(tmp_var)
+                    regi.value = self.double_characters(self.get_item_value(tmp_var))
                     regb.list_items.append(regi)
                 
                 self.big_registry_list.append(regb)
@@ -99,7 +104,11 @@ class regparser(object):
         """
         tmp_subkey = re.split('\\\\', prepare_string)
         tmp_subkey = tmp_subkey[1:]
-        return '\\'.join(tmp_subkey)
+        
+        tmp_str = '\\'.join(tmp_subkey) 
+        
+        tmp_str = self.double_characters(tmp_str)
+        return tmp_str
         
     def get_item_type(self, prepare_string):
         """
@@ -142,9 +151,12 @@ class regparser(object):
             
         tmp_list = re.split(':', prepare_string)
         if len(tmp_list) == 1:
-            return tmp_list[0][1:-1]
+            tmp_str = tmp_list[0][1:-1]
+            return tmp_str
         elif len(tmp_list) == 2:
-            return tmp_list[1]
+            tmp_str = self.prepare_value(tmp_list[1])
+            #tmp_str = self.double_characters(tmp_str)
+            return tmp_str
             
     def is_directory(self, prepare_string):
         """
@@ -156,6 +168,16 @@ class regparser(object):
             return True
         else:
             return False
+    
+    def double_characters(self, prepare_string):
+        """
+        Замена строки {289D6FA0-2A7D-11CF-AD05-0020AF0BA9E2} на строку
+        {{289D6FA0-2A7D-11CF-AD05-0020AF0BA9E2}}
+        """
+        prepare_string = re.sub(r'{', r'{{', prepare_string)
+        prepare_string = re.sub(r'}', r'}}', prepare_string)
+        
+        return prepare_string
     
     def innosetup(self):
         #print('[Registry]')
@@ -174,6 +196,4 @@ class regparser(object):
                     print('OOOOOOOOOx')
                     
                     #sys.exit(1)
-                    
-                    
                     
