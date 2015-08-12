@@ -64,7 +64,7 @@ class regparser(object):
             # освобождаем память
             regi = ''
             regb = ''
-
+            
     def prepare_value(self, prepare_string):
         # превращает данные в формат InnoSetup, преобразует данные
         # 43,00,3a,00,5c,00,45,00,47,00,52,00,50,00,4f,00,52,00,41,00,\

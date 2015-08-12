@@ -1,8 +1,11 @@
 __pycache__/
 
+_regs/
+
 regs/
 
 dump.txt
 
 37.reg
 
+22.reg
