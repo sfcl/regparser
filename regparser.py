@@ -10,6 +10,8 @@ import re
 import sys
 import configparser
 
+from convchars.ucs2utf import usc2utf
+
 class registry_item(object):
     # класс контейнер для хранения одной единицы вложенного элемента реестра
     def __init__(self):
@@ -181,6 +183,9 @@ class regparser(object):
             return tmp_list[0]
         elif len(tmp_list) == 2:
             tmp_str = self.prepare_value(tmp_list[1])
+            
+            if self.last_type == 'expandsz':
+                tmp_str = usc2utf(tmp_str)
             #tmp_str = self.double_characters(tmp_str)
             return tmp_str
             

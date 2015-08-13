@@ -5,6 +5,7 @@ import random
 import unittest
 from glob import glob
 from regparser import regparser
+from convchars.ucs2utf import usc2utf
 
 class SyntaxParserChecker(unittest.TestCase):
     def setUp(self):
@@ -59,7 +60,11 @@ class SyntaxParserChecker(unittest.TestCase):
         
     def test_text_proc1_3(self):
         self.tmp = self.reg.double_characters('00 00 00 00', debug=True)
-        self.assertEqual(self.tmp, '00 00 00 00')
+        self.assertEqual(self.tmp, '"00 00 00 00"')
+        
+    def tset_ucs2utf_1(self):
+        self.tmp = usc2utf('43,00,3a,00,5c,00,45,00,47,00,52,00,50,00,4f,00,52,00,41,00,00,00')
+        self.assertEqual(self.tmp, 'C:\EGRPORA')
     
 if __name__ == '__main__':
     unittest.main()
