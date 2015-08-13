@@ -130,7 +130,7 @@ class regparser(object):
         tmp_str = '\\'.join(tmp_subkey) 
         
         tmp_str = '"' + tmp_str + '"' # опять хак!
-        tmp_str = self.double_characters(tmp_str)
+        tmp_str = self.double_characters2(tmp_str)
         return tmp_str
         
     def get_item_type(self, prepare_string):
@@ -170,6 +170,9 @@ class regparser(object):
         возвращаем 09,39,40,30,43,48,94,89,32,49
         """
         if self.is_directory(prepare_string):
+            # заменяем \\ на \
+            # prepare_string = re.sub(r'\\', r'\', prepare_string)
+            prepare_string = prepare_string.replace('\\\\','\\')
             return prepare_string
             
         tmp_list = re.split(':', prepare_string)
@@ -218,7 +221,18 @@ class regparser(object):
         prepare_string = '"' + prepare_string + '"'    
         
         return prepare_string
-    
+        
+    def double_characters2(self, prepare_string, debug=False, type='binary'):
+        """
+        Замена строки {289D6FA0-2A7D-11CF-AD05-0020AF0BA9E2} на строку
+        {{289D6FA0-2A7D-11CF-AD05-0020AF0BA9E2}}
+        """
+        
+        prepare_string = re.sub(r'{', r'{{', prepare_string)
+        prepare_string = re.sub(r'}', r'}}', prepare_string)
+        
+        return prepare_string
+
     def innosetup(self):
         #print('[Registry]')
         for hive in self.big_registry_list:
