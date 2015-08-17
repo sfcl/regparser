@@ -215,7 +215,9 @@ class regparser(object):
             prepare_string = '"' + prepare_string + '"'
             return prepare_string
             
-        prepare_string = prepare_string[1:-1]
+        if self.last_type != 'expandsz':            # хак!
+            prepare_string = prepare_string[1:-1]
+        
         # выполняем условие если внутри строки есть двойные кавычки
         if re.search('"', prepare_string):
             prepare_string = re.sub(r'"', r'""', prepare_string)
@@ -243,16 +245,14 @@ class regparser(object):
         for hive in self.big_registry_list:
             #print(hive.root, '|', hive.subkey)
             for itms in hive.list_items:
-                try:
-                    tmp_str = ''
-                    tmp_str += 'Root: ' + hive.root + ';'
-                    tmp_str += ' Subkey: ' + hive.subkey + ';'
-                    tmp_str += ' ValueType: ' + itms.type + ';'
-                    tmp_str += ' ValueName: ' + itms.name + ';'
-                    tmp_str += ' ValueData: ' + itms.value              
-                    print(tmp_str)
-                except TypeError:
-                    print('OOOOOOOOOx')
+                tmp_str = ''
+                tmp_str += 'Root: ' + hive.root + ';'
+                tmp_str += ' Subkey: ' + hive.subkey + ';'
+                tmp_str += ' ValueType: ' + itms.type + ';'
+                tmp_str += ' ValueName: ' + itms.name + ';'
+                tmp_str += ' ValueData: ' + itms.value + ';'
+                #tmp_str += ' Flags: uninsdeletekey'
+                #tmp_str += ' Check: Is64BitInstallMode'
+                print(tmp_str)
                     
-                    #sys.exit(1)
                     

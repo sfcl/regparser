@@ -5,7 +5,9 @@ from glob import glob
 from regparser import regparser
 
 
-files_list = glob('regs/*.reg')
+files_list = glob('regs_32/*.reg')
+#files_list = ['37.reg',]
+
 
 reg = regparser()
 reg.read_files_list(files_list)

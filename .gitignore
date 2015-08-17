@@ -2,6 +2,11 @@ __pycache__/
 
 _regs/
 
+
+regs_32/
+
+regs_64/
+
 regs/
 
 dump.txt
