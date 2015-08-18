@@ -31,12 +31,14 @@ class regparser(object):
         # fn - список из строк-имён файлов
         self.big_registry_list = []
         self.files_names = []
-
+        self.read_from_files = True
         
         
         # инициализируем пустые атрибуты для последующего доступа к ним из методов
         self.last_type = ''
         self.config = ''
+        self.blks = ''
+        
         
     def read_files_list(self,  fns):
         """
@@ -59,6 +61,7 @@ class regparser(object):
         """
         Анализ  реестровых данных из строки
         """
+        self.read_from_files = False
         self.big_registry_list = [] # очищаем список от возможных старых данных
         self.config = configparser.ConfigParser(
             interpolation=configparser.ExtendedInterpolation(), 
@@ -100,16 +103,18 @@ class regparser(object):
         """
         
         
-        for itms in self.blks:
-            for keys in self.config[itms]:
-                print('debug=',keys, self.config[itms][keys])
+        #for itms in self.blks:
+        #    for keys in self.config[itms]:
+        #        print('debug=',keys, self.config[itms][keys])
         
         # наполняем список big_registry_list данными
         for hive in self.blks:
             self.regb = registry_block()
-            self.regb.root = self.get_root(self.config[hive].name)
-            print(self.get_root(self.config[hive]))
-            self.regb.subkey = self.reg_subkey(self.config[hive].name)
+            self.tmp_arg = repr(self.config[hive].name)
+            self.tmp_arg = self.tmp_arg[1:-1]
+            self.regb.root = self.get_root(self.tmp_arg)
+            self.regb.subkey = self.reg_subkey(self.tmp_arg)
+            
             for itm in self.config[hive]:
                 self.regi = registry_item()
                 self.regi.name = itm[1:-1] # убираем кавычки слева и справа 
@@ -156,7 +161,11 @@ class regparser(object):
         Из строки вида HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ORACLE\HOME0
         получаем HKLM
         """
-        tmp_root = os.path.split(prepare_string)
+        if self.read_from_files:
+            tmp_root = re.split('\\\\', prepare_string)
+        else:
+            tmp_root = os.path.split(prepare_string)
+        
         tmp_root = tmp_root[0]
         if tmp_root == 'HKEY_LOCAL_MACHINE':
             return 'HKLM'
@@ -178,15 +187,16 @@ class regparser(object):
         Из строки вида HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ORACLE\HOME0
         получаем SOFTWARE\Wow6432Node\ORACLE\HOME0
         """
-        #print('debug ', prepare_string)
-        tmp_subkey = os.path.split(prepare_string)
-        #tmp_subkey = re.split('\\', prepare_string)
+        if self.read_from_files:
+            tmp_subkey = re.split('\\\\', prepare_string)
+        else:
+            tmp_subkey = os.path.split(prepare_string)
+        
         tmp_subkey = tmp_subkey[1:]
         
         tmp_str = '\\'.join(tmp_subkey) 
         
         tmp_str = '"' + tmp_str + '"' # опять хак!
-        #tmp_str = self.double_characters2(tmp_str)
         tmp_str = self.double_characters(tmp_str)
         return tmp_str
         
