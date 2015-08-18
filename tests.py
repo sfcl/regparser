@@ -14,6 +14,11 @@ class SyntaxParserChecker(unittest.TestCase):
         self.reg.read_files_list(self.files_list)
         self.tmp = ''
 
+    def test_root1(self):
+        self.tmp = self.reg.get_root('HKEY_LOCAL_MACHINE')
+        self.assertEqual(self.tmp, 'HKLM')
+        
+        
     def test_get_key_type1(self):
         self.tmp = self.reg.get_item_type('hex:00,00,00,00')
         self.assertEqual(self.tmp, 'binary')
@@ -51,11 +56,11 @@ class SyntaxParserChecker(unittest.TestCase):
         self.assertTrue(self.tmp)
 
     def test_text_proc1_1(self):
-        self.tmp = self.reg.text_proc1('3,0,3a,00,5c,00,45,00,47,00,52,00,50', debug=True)
+        self.tmp = self.reg.append_first_zero('3,0,3a,00,5c,00,45,00,47,00,52,00,50', debug=True)
         self.assertEqual(self.tmp, '03 00 3a 00 5c 00 45 00 47 00 52 00 50')
         
     def test_text_proc1_2(self):
-        self.tmp = self.reg.text_proc1('0,00,00,0', debug=True)
+        self.tmp = self.reg.append_first_zero('0,00,00,0', debug=True)
         self.assertEqual(self.tmp, '00 00 00 00')
         
     def test_text_proc1_3(self):
