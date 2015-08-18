@@ -76,26 +76,7 @@ class regparser(object):
         self.blks = self.config.sections()
         
         # наполняем список big_registry_list данными
-        for hive in self.blks:
-            self.regb = registry_block()
-            self.tmp_arg = repr(self.config[hive].name)
-            self.tmp_arg = self.tmp_arg[1:-1]
-            self.regb.root = self.get_root(self.tmp_arg)
-            self.regb.subkey = self.reg_subkey(self.tmp_arg)
-            for itm in self.config[hive]:
-                self.regi = registry_item()
-                self.regi.name = itm[1:-1] # убираем кавычки слева и справа 
-                tmp_var = self.config[hive][itm]
-                self.regi.type = self.get_item_type(tmp_var)
-                self.last_type = self.get_item_type(tmp_var)
-                tmp_str = self.get_item_value(tmp_var)
-                tmp_str = self.append_first_zero(tmp_str)
-                tmp_str = self.double_characters(tmp_str)
-                self.regi.value = tmp_str
-                self.regb.list_items.append(self.regi)
-            
-            self.big_registry_list.append(self.regb)
-        
+        self.filling_big_registry_list()
             
     def filling_big_registry_list(self):
         """
@@ -196,6 +177,7 @@ class regparser(object):
         
         tmp_str = '\\'.join(tmp_subkey) 
         
+        #if not self.read_from_files:
         tmp_str = '"' + tmp_str + '"' # опять хак!
         tmp_str = self.double_characters(tmp_str)
         return tmp_str
@@ -293,7 +275,7 @@ class regparser(object):
         
         prepare_string = re.sub(r'{', r'{{', prepare_string)
         prepare_string = re.sub(r'}', r'}}', prepare_string)
-            
+        
         prepare_string = '"' + prepare_string + '"'    
         
         return prepare_string
