@@ -72,7 +72,6 @@ class regparser(object):
         # это тоже хак!
         self.config.optionxform = str
         self.config.read_string(all_content)
-        self.big_registry_list = [] # освобождаем содержимое от старых данных
         self.blks = self.config.sections()
         
         # наполняем список big_registry_list данными
@@ -82,34 +81,38 @@ class regparser(object):
         """
         Наполнение списка big_registry_list слкжебными структурами данных
         """
-        
-        
-        #for itms in self.blks:
-        #    for keys in self.config[itms]:
-        #        print('debug=',keys, self.config[itms][keys])
-        
-        # наполняем список big_registry_list данными
         for hive in self.blks:
             self.regb = registry_block()
             self.tmp_arg = repr(self.config[hive].name)
             self.tmp_arg = self.tmp_arg[1:-1]
             self.regb.root = self.get_root(self.tmp_arg)
-            self.regb.subkey = self.reg_subkey(self.tmp_arg)
+            self.regb.subkey = '"' + self.reg_subkey(self.tmp_arg) + '"'
             
             for itm in self.config[hive]:
                 self.regi = registry_item()
-                self.regi.name = itm[1:-1] # убираем кавычки слева и справа 
+                self.regi.name =  self.get_item_name(itm)
                 tmp_var = self.config[hive][itm]
                 self.regi.type = self.get_item_type(tmp_var)
                 self.last_type = self.get_item_type(tmp_var)
                 tmp_str = self.get_item_value(tmp_var)
                 tmp_str = self.append_first_zero(tmp_str)
                 tmp_str = self.double_characters(tmp_str)
-                self.regi.value = tmp_str
+                self.regi.value = '"' + tmp_str + '"'
                 self.regb.list_items.append(self.regi)
             
             self.big_registry_list.append(self.regb)
             
+    def get_item_name(self, prepare_string):
+        """
+        Замена симола @ на пустую строку ""
+        """
+        
+        if prepare_string == '@':
+            return '""'
+            
+        else:
+            return prepare_string
+    
     def append_first_zero(self, prepare_string, debug=False):
         """
         Преобразуем значение ключа реестра типа binar из формата 
@@ -168,17 +171,10 @@ class regparser(object):
         Из строки вида HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ORACLE\HOME0
         получаем SOFTWARE\Wow6432Node\ORACLE\HOME0
         """
-        if self.read_from_files:
-            tmp_subkey = re.split('\\\\', prepare_string)
-        else:
-            tmp_subkey = os.path.split(prepare_string)
-        
+        tmp_subkey = prepare_string.split(r'\\')
         tmp_subkey = tmp_subkey[1:]
-        
         tmp_str = '\\'.join(tmp_subkey) 
         
-        #if not self.read_from_files:
-        tmp_str = '"' + tmp_str + '"' # опять хак!
         tmp_str = self.double_characters(tmp_str)
         return tmp_str
         
@@ -223,12 +219,15 @@ class regparser(object):
             # заменяем \\ на \
             # prepare_string = re.sub(r'\\', r'\', prepare_string)
             prepare_string = prepare_string.replace('\\\\','\\')
+            prepare_string = prepare_string[1:-1]
             return prepare_string
             
         tmp_list = re.split(':', prepare_string)
         
         if self.last_type == 'string':
-            return tmp_list[0]
+            tmp_str = tmp_list[0]
+            tmp_str = tmp_str[1:-1] # удаляем окражающие кавычки 
+            return tmp_str
             
         if self.last_type == 'expandsz' or self.last_type == 'multisz':
             tmp_str = self.escape_slash(tmp_list[1])
@@ -262,21 +261,12 @@ class regparser(object):
         if not(prepare_string):
             return ''
         
-        if debug or self.last_type == 'binary':
-            prepare_string = '"' + prepare_string + '"'
-            return prepare_string
-            
-        if self.last_type != 'expandsz':            # хак!
-            prepare_string = prepare_string[1:-1]
-        
-        # выполняем условие если внутри строки двойные кавычки
+        # выполняем условие правильности формата, если внутри строки двойные кавычки
         if re.search('"', prepare_string):
             prepare_string = re.sub(r'"', r'""', prepare_string)
         
         prepare_string = re.sub(r'{', r'{{', prepare_string)
         prepare_string = re.sub(r'}', r'}}', prepare_string)
-        
-        prepare_string = '"' + prepare_string + '"'    
         
         return prepare_string
 
@@ -286,7 +276,6 @@ class regparser(object):
         Пригодного для использования в программ в InnoSetup
         """
         for hive in self.big_registry_list:
-            #print(hive.root, '|', hive.subkey)
             for itms in hive.list_items:
                 tmp_str = ''
                 tmp_str += 'Root: ' + hive.root + ';'
@@ -295,7 +284,7 @@ class regparser(object):
                 tmp_str += ' ValueName: ' + itms.name + ';'
                 tmp_str += ' ValueData: ' + itms.value + ';'
                 #tmp_str += ' Flags: uninsdeletekey'
-                #tmp_str += ' Check: Is64BitInstallMode'
+                tmp_str += ' Check: Is64BitInstallMode'
                 print(tmp_str)
                     
                     

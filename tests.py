@@ -19,6 +19,10 @@ class SyntaxParserChecker(unittest.TestCase):
         self.assertEqual(self.tmp, 'HKLM')
         
         
+    def test_get_subkey1(self):
+        self.tmp = self.reg.reg_subkey(r'HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\ORACLE\\HOME0')
+        self.assertEqual(self.tmp, r'SOFTWARE\Wow6432Node\ORACLE\HOME0')
+    
     def test_get_key_type1(self):
         self.tmp = self.reg.get_item_type('hex:00,00,00,00')
         self.assertEqual(self.tmp, 'binary')
@@ -29,19 +33,19 @@ class SyntaxParserChecker(unittest.TestCase):
         
     def test_get_value1(self):
         self.tmp = self.reg.get_item_value('"C:\\EGRPORA\\bin\\ifbld60.exe,-1"')
-        self.assertEqual(self.tmp, '"C:\\EGRPORA\\bin\\ifbld60.exe,-1"')
+        self.assertEqual(self.tmp, 'C:\\EGRPORA\\bin\\ifbld60.exe,-1')
     
     def test_get_value2(self):
-        self.tmp = self.reg.double_characters('"C:\\EGRPORA\\bin\\ifbld60.exe,-1"')
-        self.assertEqual(self.tmp, '"C:\\EGRPORA\\bin\\ifbld60.exe,-1"')
+        self.tmp = self.reg.double_characters('C:\\EGRPORA\\bin\\ifbld60.exe,-1')
+        self.assertEqual(self.tmp, 'C:\\EGRPORA\\bin\\ifbld60.exe,-1')
     
     def test_get_value3(self):
-        self.tmp = self.reg.double_characters('"C:\\EGRPORA\\bin\\ifbld60.exe,-1"')
-        self.assertEqual(self.tmp, '"C:\\EGRPORA\\bin\\ifbld60.exe,-1"')
+        self.tmp = self.reg.double_characters('C:\\EGRPORA\\bin\\ifbld60.exe,-1')
+        self.assertEqual(self.tmp, 'C:\\EGRPORA\\bin\\ifbld60.exe,-1')
         
     def test_get_value4(self):
-        self.tmp = self.reg.double_characters(r'"[open(\"%1\")]"')
-        self.assertEqual(self.tmp, r'"[open(\""%1\"")]"')
+        self.tmp = self.reg.double_characters(r'[open(\"%1\")]')
+        self.assertEqual(self.tmp, r'[open(\""%1\"")]')
     
     def test_is_path1(self):
         self.tmp = self.reg.is_directory('hex:00,00,00,00')
@@ -65,7 +69,7 @@ class SyntaxParserChecker(unittest.TestCase):
         
     def test_text_proc1_3(self):
         self.tmp = self.reg.double_characters('00 00 00 00', debug=True)
-        self.assertEqual(self.tmp, '"00 00 00 00"')
+        self.assertEqual(self.tmp, '00 00 00 00')
         
     def tset_ucs2utf_1(self):
         self.tmp = usc2utf('43,00,3a,00,5c,00,45,00,47,00,52,00,50,00,4f,00,52,00,41,00,00,00')
