@@ -23,6 +23,11 @@ class SyntaxParserChecker(unittest.TestCase):
         self.tmp = self.reg.reg_subkey(r'HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\ORACLE\\HOME0')
         self.assertEqual(self.tmp, r'SOFTWARE\Wow6432Node\ORACLE\HOME0')
     
+    def test_get_subkey2(self):
+        self.reg.read_from_files = False
+        self.tmp = self.reg.reg_subkey(r'HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ORACLE\HOME0')
+        self.assertEqual(self.tmp, r'SOFTWARE\Wow6432Node\ORACLE\HOME0')
+        
     def test_get_key_type1(self):
         self.tmp = self.reg.get_item_type('hex:00,00,00,00')
         self.assertEqual(self.tmp, 'binary')

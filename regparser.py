@@ -46,7 +46,8 @@ class regparser(object):
         """
         # отключаем ругательство на стартовую строку Windows Registry Editor Version 5.00
         # это хак!
-        self.config = configparser.RawConfigParser(comment_prefixes = ('#', ';', 'Windows', ))
+        self.read_from_files = True
+        self.config = configparser.RawConfigParser(comment_prefixes = ('#', ';', 'Windows Registry', ))
 
         # включаем режим правильных регистров букв в именах ключей
         # это тоже хак!
@@ -65,7 +66,7 @@ class regparser(object):
         self.big_registry_list = [] # очищаем список от возможных старых данных
         self.config = configparser.ConfigParser(
             interpolation=configparser.ExtendedInterpolation(), 
-            strict=False, comment_prefixes = ('#', ';', 'Windows', ),
+            strict=False, comment_prefixes = ('#', ';', 'Windows Registry', ),
             allow_no_value=True
         )
         # включаем режим правильных регистров букв в именах ключей
@@ -137,6 +138,7 @@ class regparser(object):
         # в формат 
         # 43,00,3a,00,5c,00,45,00,47,00,52,00,50,00,4f,00,52,00,41,00, 5c,00,46,00,4f,00,52,00,4d,00,53,00,36,00,30,00,00,00
         prepare_string = prepare_string.replace('\n', '') # Убираем переводы строк
+        prepare_string = prepare_string.replace('\r', '') # Убираем переводы строк
         prepare_string = prepare_string.replace('\\', '') # Убираем обратные слеши
         return prepare_string
         
@@ -171,7 +173,13 @@ class regparser(object):
         Из строки вида HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ORACLE\HOME0
         получаем SOFTWARE\Wow6432Node\ORACLE\HOME0
         """
-        tmp_subkey = prepare_string.split(r'\\')
+        if self.read_from_files:
+            tmp_subkey = prepare_string.split(r'\\')
+        else:
+            prepare_string = repr(prepare_string)
+            prepare_string = prepare_string[1:-1]
+            tmp_subkey = prepare_string.split(r'\\')
+        
         tmp_subkey = tmp_subkey[1:]
         tmp_str = '\\'.join(tmp_subkey) 
         
