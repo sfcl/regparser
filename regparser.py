@@ -140,6 +140,10 @@ class regparser(object):
         prepare_string = prepare_string.replace('\n', '') # Убираем переводы строк
         prepare_string = prepare_string.replace('\r', '') # Убираем переводы строк
         prepare_string = prepare_string.replace('\\', '') # Убираем обратные слеши
+        
+        if self.last_type == 'multisz':
+            prepare_string = prepare_string.replace(' ', '') # Два подряд идущих пробела
+            
         return prepare_string
         
     def get_root(self, prepare_string):
@@ -237,18 +241,35 @@ class regparser(object):
             tmp_str = tmp_str[1:-1] # удаляем окражающие кавычки 
             return tmp_str
             
-        if self.last_type == 'expandsz' or self.last_type == 'multisz':
+        if self.last_type == 'expandsz':
             tmp_str = self.escape_slash(tmp_list[1])
             tmp_str = usc2utf(tmp_str)
             return tmp_str
-            
+        
+        if self.last_type == 'multisz':
+            tmp_str = self.escape_slash(tmp_list[1])
+            tmp_str = usc2utf(tmp_str)
+            return tmp_str
+        
         if self.last_type == 'binary':
             tmp_str = self.escape_slash(tmp_list[1])
             return tmp_str
         
-        if self.last_type == 'dword' or self.last_type == 'qword':
+        if self.last_type == 'dword':
             tmp_str = tmp_list[1]
+            tmp_str = '$' + tmp_str
             return tmp_str
+            
+        if self.last_type == 'qword':
+            tmp_str = tmp_list[1]
+            tmp_list = tmp_str.split(',')
+            tmp_list.reverse()
+            tmp_list = list(filter(lambda itm: itm != '00', tmp_list))
+            tmp_str = ''.join(tmp_list)
+            tmp_str = '$' + tmp_str
+            return tmp_str
+            
+        
             
     def is_directory(self, prepare_string):
         """
@@ -292,7 +313,7 @@ class regparser(object):
                 tmp_str += ' ValueName: ' + itms.name + ';'
                 tmp_str += ' ValueData: ' + itms.value + ';'
                 #tmp_str += ' Flags: uninsdeletekey'
-                tmp_str += ' Check: Is64BitInstallMode'
+                #tmp_str += ' Check: Is64BitInstallMode'
                 print(tmp_str)
                     
                     

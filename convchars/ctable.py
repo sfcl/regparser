@@ -4,6 +4,7 @@
 # Источник данных: http://www.columbia.edu/kermit/ucs2.html
 
 convert_table = {
+'0000' : '{break}',
 '0020' : ' ',
 '0021' : '!',
 '0022' : '"',
