@@ -14,7 +14,7 @@ import re
 from convchars.ctable import convert_table
 #from ctable import convert_table
 
-def usc2utf(prep_str):
+def usc2utf(prep_str, expandsz=False):
     tmp_list = re.split('\,', prep_str)
     result_str = ''
     #группируем элементы массива по 2
@@ -27,10 +27,14 @@ def usc2utf(prep_str):
         v2 = tmp_itm[1]
         v21 = v2 + v1 # переставляем элементы местами
         v21 = v21.upper()
-        one_char = convert_table.get(v21, '')
+        if expandsz:
+            one_char = convert_table.get(v21, '')
+            one_char = one_char.replace('{break}', '')
+        else:
+            one_char = convert_table.get(v21, '')
         result_str+=one_char
     
     return result_str
     
 if __name__ == '__main__':
-    print(usc2utf('31,00,31,00,31,00,31,00,00,00,32,00,32,00,32,00,32,00,00,00,33,00,33,00,33,00,33,00,00,00,00,00'))
+    pass

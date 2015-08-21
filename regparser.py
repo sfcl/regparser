@@ -206,7 +206,7 @@ class regparser(object):
         
         elif len(tmp_list) >= 2:
             if tmp_list[0] == 'hex(2)':
-                return 'expandsz'
+                return 'expandsz' 
             
             elif tmp_list[0] == 'hex':
                 return 'binary'
@@ -243,7 +243,7 @@ class regparser(object):
             
         if self.last_type == 'expandsz':
             tmp_str = self.escape_slash(tmp_list[1])
-            tmp_str = usc2utf(tmp_str)
+            tmp_str = usc2utf(tmp_str, expandsz=True)
             return tmp_str
         
         if self.last_type == 'multisz':
@@ -294,8 +294,12 @@ class regparser(object):
         if re.search('"', prepare_string):
             prepare_string = re.sub(r'"', r'""', prepare_string)
         
-        prepare_string = re.sub(r'{', r'{{', prepare_string)
-        prepare_string = re.sub(r'}', r'}}', prepare_string)
+        if self.last_type == 'expandsz' or self.last_type == 'multisz':
+            pass
+        else:
+            prepare_string = re.sub(r'{', r'{{', prepare_string)
+            prepare_string = re.sub(r'}', r'}}', prepare_string)
+        
         
         return prepare_string
 
